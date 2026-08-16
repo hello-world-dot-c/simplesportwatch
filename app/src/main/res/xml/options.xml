@@ -115,6 +115,12 @@
             android:defaultValue="98%"
             android:entries="@array/scaleValues"
             android:entryValues="@array/scaleValues" />
+        <ListPreference android:title="Seconds Size"
+            android:summary="Set size of the small seconds display"
+            android:key="secondsSize"
+            android:defaultValue="100%"
+            android:entries="@array/secondsSizeValues"
+            android:entryValues="@array/secondsSizeValues" />
         <CheckBoxPreference android:title="Vibrate After Countdown"
             android:key="vibrateAfterCountdown"
             android:defaultValue="true"

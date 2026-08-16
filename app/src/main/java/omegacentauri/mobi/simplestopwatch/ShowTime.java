@@ -20,6 +20,7 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -54,6 +55,7 @@ abstract public class ShowTime extends Activity {
     private static final float unselectedThickness = 2f;
     private static final float focusedThickness = 6f;
     private static final float selectedThickness = 9f;
+    private static final float BASE_FRACTION_SIZE_SP = 32f;
     protected View mainContainer;
     protected static int textButtons[] = {};
     protected static int imageButtons[][] = {};
@@ -217,7 +219,10 @@ abstract public class ShowTime extends Activity {
 
         ((ViewGroup) findViewById(android.R.id.content)).getChildAt(0).setBackgroundColor(back);
 
-        ((TextView)findViewById(R.id.fraction)).setTextColor(controlFore);
+        TextView fractionView = (TextView)findViewById(R.id.fraction);
+        fractionView.setTextColor(controlFore);
+        fractionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, BASE_FRACTION_SIZE_SP *
+                Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%", "")) / 100f);
         debug(String.format("controlFore=%x", controlFore));
 
         bigDigits.setTextColor(fore);

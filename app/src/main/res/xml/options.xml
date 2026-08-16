@@ -116,7 +116,7 @@
             android:entries="@array/scaleValues"
             android:entryValues="@array/scaleValues" />
         <ListPreference android:title="Seconds Size"
-            android:summary="Set size of the small seconds display"
+            android:summary="Set size of the seconds relative to the rest of the time"
             android:key="secondsSize"
             android:defaultValue="100%"
             android:entries="@array/secondsSizeValues"

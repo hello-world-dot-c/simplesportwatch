@@ -20,6 +20,8 @@ public class BigTextView extends View {
     float yOffsets[];
     float xOffsets[];
     float scale = 0.98f;
+    float secondsScale = 1f;
+    boolean hasSeconds = false;
     GetCenter getCenterX = null;
     GetCenter getCenterY = null;
     static final float BASE_FONT_SIZE = 50f;
@@ -71,6 +73,20 @@ public class BigTextView extends View {
     public void setScale(float scale) {
         this.scale = scale;
         invalidate();
+    }
+
+    public void setSecondsScale(float secondsScale) {
+        if (this.secondsScale != secondsScale) {
+            this.secondsScale = secondsScale;
+            invalidate();
+        }
+    }
+
+    public void setHasSeconds(boolean hasSeconds) {
+        if (this.hasSeconds != hasSeconds) {
+            this.hasSeconds = hasSeconds;
+            invalidate();
+        }
     }
 
     public void setLineSpacing(float l) {
@@ -174,8 +190,38 @@ public class BigTextView extends View {
         cx = adjustCenter(cWidth, getCenterX, adjustX * maxWidth);
         dy += adjustCenter(cHeight, getCenterY, adjustY * height) - cHeight/2f;
 
+        float fullTextSize = currentPaint.getTextSize();
+
         for (int i = 0 ; i < n ; i++) {
-            miniFont.drawText(canvas, lines[i], cx + adjustX * xOffsets[i], dy + adjustY * yOffsets[i], currentPaint, letterSpacing);
+            String line = lines[i];
+            float x = cx + adjustX * xOffsets[i];
+            float y = dy + adjustY * yOffsets[i];
+
+            if (hasSeconds && secondsScale < 1f && i == n - 1) {
+                String prefix;
+                String suffix;
+                if (n > 1) {
+                    // the seconds have their own line in multiline layouts
+                    prefix = "";
+                    suffix = line;
+                }
+                else {
+                    int idx = line.lastIndexOf(':');
+                    prefix = idx >= 0 ? line.substring(0, idx + 1) : "";
+                    suffix = idx >= 0 ? line.substring(idx + 1) : line;
+                }
+                if (prefix.length() > 0) {
+                    currentPaint.setTextSize(fullTextSize);
+                    miniFont.drawText(canvas, prefix, x, y, currentPaint, letterSpacing);
+                    x += miniFont.measureAdvance(currentPaint, letterSpacing, prefix);
+                }
+                currentPaint.setTextSize(fullTextSize * secondsScale);
+                miniFont.drawText(canvas, suffix, x, y, currentPaint, letterSpacing);
+                currentPaint.setTextSize(fullTextSize);
+            }
+            else {
+                miniFont.drawText(canvas, line, x, y, currentPaint, letterSpacing);
+            }
         }
     }
 

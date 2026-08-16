@@ -49,8 +49,13 @@ public class MyClock implements BigTextView.GetCenter, MyTimeKeeper {
 
     public void updateViews() {
         Date date = new Date();
+        mainView.setHasSeconds(mainHasSeconds());
         mainView.setText(getTimeMain(date, false), false, false);
         setFractionView(getTimeFraction(date));
+    }
+
+    protected boolean mainHasSeconds() {
+        return false;
     }
 
     private String getTimeMain(Date d, boolean clip) {

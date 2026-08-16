@@ -225,6 +225,8 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             }
         }
 
+        String format = options.getString(Options.PREF_FORMAT, "h:m:s");
+        mainView.setHasSeconds(!format.equals("h:m") && !format.equals("m") && !format.equals("mm"));
         mainView.setText(formatTime(t,mainView.getHeight() > mainView.getWidth()),false, !active || paused);
         setFractionView(formatTimeFraction(t, active && paused, false));
 

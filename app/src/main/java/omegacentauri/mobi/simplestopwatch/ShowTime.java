@@ -208,6 +208,8 @@ abstract public class ShowTime extends Activity {
         bigDigits.setLineSpacing(Float.parseFloat(options.getString(Options.PREF_LINE_SPACING, "105%").replace("%",""))/100f);
         bigDigits.setLetterSpacing(Float.parseFloat(options.getString(Options.PREF_LETTER_SPACING, "95%").replace("%",""))/100f);
         bigDigits.setScale(Float.parseFloat(options.getString(Options.PREF_SCALE, "98%").replace("%",""))/100f);
+        float secondsScale = Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%",""))/100f;
+        bigDigits.setSecondsScale(secondsScale);
 
         int fore = Options.getForeColor(this, options);
         int controlFore = getControlBarForeColor();
@@ -221,8 +223,7 @@ abstract public class ShowTime extends Activity {
 
         TextView fractionView = (TextView)findViewById(R.id.fraction);
         fractionView.setTextColor(controlFore);
-        fractionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, BASE_FRACTION_SIZE_SP *
-                Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%", "")) / 100f);
+        fractionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, BASE_FRACTION_SIZE_SP * secondsScale);
         debug(String.format("controlFore=%x", controlFore));
 
         bigDigits.setTextColor(fore);

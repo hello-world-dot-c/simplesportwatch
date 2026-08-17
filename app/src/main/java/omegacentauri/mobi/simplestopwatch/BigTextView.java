@@ -301,28 +301,30 @@ public class BigTextView extends View {
     // a shrunk seconds field frees up instead of leaving it as a dead gap
     private void computeShrunkLastLineBounds(String line, RectF outBounds) {
         int idx = line.lastIndexOf(':');
-        String prefix = idx >= 0 ? line.substring(0, idx + 1) : "";
         String secondsPart = idx >= 0 ? line.substring(idx + 1) : line;
 
         float savedSize = basePaint.getTextSize();
 
-        if (prefix.length() > 0) {
-            RectF prefixBounds = new RectF();
-            miniFont.getTextBounds(basePaint, letterSpacing, prefix, 0, prefix.length(), prefixBounds);
-            float prefixAdvance = miniFont.measureAdvance(basePaint, letterSpacing, prefix);
-
+        if (idx < 0) {
+            // the whole line is the seconds field (multiline layouts, or a colon-less
+            // single-line format) - just measure it directly at the shrunk scale
             basePaint.setTextSize(savedSize * secondsScale);
             miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), outBounds);
             basePaint.setTextSize(savedSize);
-
-            outBounds.left += prefixAdvance;
-            outBounds.right += prefixAdvance;
-            outBounds.union(prefixBounds);
         }
         else {
+            // there's full-size text before the seconds field - start from the line's
+            // normal full-size bounds (identical to how every other line is measured),
+            // then shrink just the trailing edge by how much narrower the seconds field
+            // becomes at secondsScale, leaving the leading edge untouched
+            miniFont.getTextBounds(basePaint, letterSpacing, line, 0, line.length(), outBounds);
+
+            float fullAdvance = miniFont.measureAdvance(basePaint, letterSpacing, secondsPart);
             basePaint.setTextSize(savedSize * secondsScale);
-            miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), outBounds);
+            float shrunkAdvance = miniFont.measureAdvance(basePaint, letterSpacing, secondsPart);
             basePaint.setTextSize(savedSize);
+
+            outBounds.right -= (fullAdvance - shrunkAdvance);
         }
     }
 

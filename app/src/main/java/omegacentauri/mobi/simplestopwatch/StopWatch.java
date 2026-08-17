@@ -125,7 +125,7 @@ public class StopWatch extends ShowTime {
             SharedPreferences.Editor ed = options.edit();
             ed.putBoolean(Options.PREF_SPORT_MODE_PENDING_START, false);
             MyChrono.apply(ed);
-            chrono.restartButton();
+            chrono.freshStart();
         }
 
         if (firstButton != null) {

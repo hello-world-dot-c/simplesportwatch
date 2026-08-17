@@ -443,6 +443,25 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
         save();
     }
 
+    // used by Sport Mode: a full reset (zero elapsed time, no laps) that still respects
+    // whatever delay is currently configured, mirroring firstButton()'s normal !active
+    // start path (unlike restartButton(), which always forces an immediate, undelayed
+    // start) - so the same countdown beeps/voice a manual Stop, Reset, Start would produce
+    // also happen when Sport Mode switches in from the clock
+    public void freshStart() {
+        lapData = "";
+        lastLapTime = 0;
+        if (delayTime < 0)
+            lastAnnounced = delayTime - 1000;
+        else
+            lastAnnounced = 1000;
+        baseTime = SystemClock.elapsedRealtime() - delayTime;
+        paused = false;
+        active = true;
+        startUpdating();
+        save();
+    }
+
     public void firstButtonLong(String controlScheme) {
         if (!controlScheme.equals(Options.PREF_SCHEME_RESTART)) {
             return;
@@ -584,16 +603,21 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                     }
                     else {
                         if (tts != null) {
-                            tts.setLanguage(Locale.getDefault());
                             try {
+                                tts.setLanguage(Locale.getDefault());
                                 tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams);
                             }
-                            catch(Exception e) {}
+                            catch(Exception e) {
+                                StopWatch.debug("tts setup failed: "+e);
+                            }
                             // only now is speak() actually guaranteed to produce audio - a
                             // freshly-constructed TextToSpeech initializes asynchronously, and
                             // announce() calling speak() before this fires gets silently
                             // dropped by the engine, which is why "voice" previously seemed to
-                            // do nothing for short (e.g. 3 second) countdowns
+                            // do nothing for short (e.g. 3 second) countdowns. ttsReady must be
+                            // set regardless of whether setLanguage/speak above succeeded, or a
+                            // single exception there permanently strands the app on the beep
+                            // fallback with no way to recover until the next setAudio() call
                             ttsReady = true;
                         }
                     }

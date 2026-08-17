@@ -4,6 +4,14 @@
     package="omegacentauri.mobi.simplestopwatch">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <queries>
+        <!-- required on API 30+ (targetSdkVersion 31) so TextToSpeech can find and bind to
+             an engine at all; without this the app can't see any TTS package, construction
+             silently fails, and "voice" countdown falls back to beeps every time -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
     <supports-screens android:xlargeScreens="true"
         android:largeScreens="true"
         android:normalScreens="true"

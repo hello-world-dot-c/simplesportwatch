@@ -439,11 +439,6 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
         paused = false;
         active = true;
         delayTime = 0;
-        // without this, lastAnnounced can be left over from a previous run (e.g. 0, from a
-        // prior countdown reaching "GO"), which makes announce()'s delayAnnounce check false
-        // for the entire t>=0 branch below - the "GO" tone/vibrate would then silently never
-        // fire for a fresh zero-delay start
-        lastAnnounced = -1000;
         startUpdating();
         save();
     }

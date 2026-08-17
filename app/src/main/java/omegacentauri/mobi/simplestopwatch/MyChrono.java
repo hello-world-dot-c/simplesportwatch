@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,6 +55,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
     public int precision = 100;
     private TextToSpeech tts = null;
     private boolean ttsMode;
+    private volatile boolean ttsReady = false;
     private long ttsSync;
     int STREAM = AudioManager.STREAM_ALARM;;
     private boolean boostAudio = false;
@@ -127,7 +129,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
 
 
     private void announce(long t) {
-        if (t < -1000 && (tts != null && ttsMode)) {
+        if (t < -1000 && (tts != null && ttsMode && ttsReady)) {
             t += ttsSync;
         }
         else {
@@ -162,7 +164,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             lastAnnounced = floorDiv(t, 1000)*1000;
         }
         else if (t < 0) {
-            if (tts != null && ttsMode) {
+            if (tts != null && ttsMode && ttsReady) {
                 String msg;
                 if (-1000 <= t) {
                     msg = "1";
@@ -437,6 +439,11 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
         paused = false;
         active = true;
         delayTime = 0;
+        // without this, lastAnnounced can be left over from a previous run (e.g. 0, from a
+        // prior countdown reaching "GO"), which makes announce()'s delayAnnounce check false
+        // for the entire t>=0 branch below - the "GO" tone/vibrate would then silently never
+        // fire for a fresh zero-delay start
+        lastAnnounced = -1000;
         startUpdating();
         save();
     }
@@ -571,6 +578,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
 
         if (soundMode.equals("voice")) {
             ttsMode = true;
+            ttsReady = false;
             ttsParams.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(STREAM));
             tts = null;
             tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
@@ -580,11 +588,19 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                         tts = null;
                     }
                     else {
-                        if (tts != null)
+                        if (tts != null) {
+                            tts.setLanguage(Locale.getDefault());
                             try {
                                 tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams);
                             }
                             catch(Exception e) {}
+                            // only now is speak() actually guaranteed to produce audio - a
+                            // freshly-constructed TextToSpeech initializes asynchronously, and
+                            // announce() calling speak() before this fires gets silently
+                            // dropped by the engine, which is why "voice" previously seemed to
+                            // do nothing for short (e.g. 3 second) countdowns
+                            ttsReady = true;
+                        }
                     }
                 }
             });

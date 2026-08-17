@@ -149,6 +149,12 @@ public class Options extends PreferenceActivity {
         else if (f.equals("FHWA E")) {
             mf = new FHWAE();
         }
+        else if (f.equals("poppins bold")) {
+            mf = new PoppinsBoldDigitsColon();
+        }
+        else if (f.equals("poppins extrabold")) {
+            mf = new PoppinsExtraBoldDigitsColon();
+        }
         else {
             mf = new SansBoldDigitsColon();
         }

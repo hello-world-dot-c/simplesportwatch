@@ -117,6 +117,8 @@
         <item>bold</item>
         <item>medium</item>
         <item>regular</item>
+        <item>poppins bold</item>
+        <item>poppins extrabold</item>
     </string-array>
 
     <string-array name="fsControlBarBrightnessValues">
@@ -145,6 +147,8 @@
         <item>Roboto Bold</item>
         <item>Roboto Medium</item>
         <item>Roboto Regular</item>
+        <item>Poppins Bold</item>
+        <item>Poppins ExtraBold</item>
     </string-array>
 
     <string-array name="letterSpacingValues">

@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.audiofx.LoudnessEnhancer;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -25,7 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -60,7 +60,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
     int STREAM = AudioManager.STREAM_ALARM;;
     private boolean boostAudio = false;
     private static final int GAIN = 2000;
-    HashMap<String,String> ttsParams = new HashMap<String,String>();
+    Bundle ttsParams = new Bundle();
     private LoudnessEnhancer loudnessEnhancer = null;
     private static final long SHORT_TONE_LENGTH = 75;
     private static final long LONG_TONE_LENGTH = 600;
@@ -176,7 +176,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                     msg = "3";
                 }
                 StopWatch.debug("say: "+msg);
-                tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams);
+                tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams, "countdown"+msg);
             }
             else if (!quiet && !countdownSilent) {
                 safePlay(shortTone);
@@ -590,10 +590,15 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             }
         }
 
-        if (soundMode.equals("voice")) {
+        if (soundMode.equals("voice") && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            // speak(CharSequence, int, Bundle, String) requires API 21; minSdkVersion here is
+            // 4, so fall back to beeps rather than risk NoSuchMethodError on an old device
+            ttsMode = false;
+        }
+        else if (soundMode.equals("voice")) {
             ttsMode = true;
             ttsReady = false;
-            ttsParams.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(STREAM));
+            ttsParams.putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, STREAM);
             tts = null;
             tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
                 @Override
@@ -605,7 +610,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                         if (tts != null) {
                             try {
                                 tts.setLanguage(Locale.getDefault());
-                                tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams);
+                                tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams, "warmup");
                             }
                             catch(Exception e) {
                                 StopWatch.debug("tts setup failed: "+e);
@@ -624,7 +629,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                 }
             });
             if (loudnessEnhancer != null)
-                ttsParams.put(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, String.valueOf(sessionId));
+                ttsParams.putInt(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, sessionId);
         }
         else if (soundMode.equals("beeps")) {
             ttsMode = false;

@@ -237,32 +237,33 @@ public class BigTextView extends View {
                     x += miniFont.measureAdvance(currentPaint, letterSpacing, ":");
                 }
 
-                currentPaint.setTextSize(fullTextSize);
-                float fullAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
-                currentPaint.setTextSize(fullTextSize * secondsScale);
-                float shrunkAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
-
                 if (n == 1) {
-                    // landscape: freed-up width goes before/after/split-around the seconds
-                    x += secondsAlign * (fullAdvance - shrunkAdvance);
-                }
-                else {
-                    // portrait: the whole line is the seconds; keep it horizontally centered,
-                    // and use secondsAlign to decide the vertical (top/center/bottom) position
-                    // within the vertical space the full-size seconds line would have used
-                    x += (fullAdvance - shrunkAdvance) / 2f;
-
+                    // landscape: the seconds share the line with the rest of the digits, so
+                    // shrinking them frees up height (they don't reach as high/low as the full
+                    // size digits); secondsAlign picks top/center/bottom within that line height
                     float savedBaseSize = basePaint.getTextSize();
                     miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
-                    float fullLineHeight = tmpBounds.height();
+                    float fullHeight = tmpBounds.height();
                     basePaint.setTextSize(savedBaseSize * secondsScale);
                     miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
-                    float shrunkLineHeight = tmpBounds.height();
+                    float shrunkHeight = tmpBounds.height();
                     basePaint.setTextSize(savedBaseSize);
 
-                    y += secondsAlign * (fullLineHeight - shrunkLineHeight) * adjustY;
+                    y += secondsAlign * (fullHeight - shrunkHeight) * adjustY;
+                }
+                else {
+                    // portrait: the whole line is the seconds, on its own row, so shrinking it
+                    // frees up width relative to the rows above; secondsAlign picks left/center/
+                    // right within the width the full-size row would have used
+                    currentPaint.setTextSize(fullTextSize);
+                    float fullAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
+                    currentPaint.setTextSize(fullTextSize * secondsScale);
+                    float shrunkAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
+
+                    x += secondsAlign * (fullAdvance - shrunkAdvance);
                 }
 
+                currentPaint.setTextSize(fullTextSize * secondsScale);
                 miniFont.drawText(canvas, secondsPart, x, y, currentPaint, letterSpacing);
                 currentPaint.setTextSize(fullTextSize);
             }

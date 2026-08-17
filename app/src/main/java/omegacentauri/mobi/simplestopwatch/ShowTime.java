@@ -210,6 +210,9 @@ abstract public class ShowTime extends Activity {
         bigDigits.setScale(Float.parseFloat(options.getString(Options.PREF_SCALE, "98%").replace("%",""))/100f);
         float secondsScale = Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%",""))/100f;
         bigDigits.setSecondsScale(secondsScale);
+        String secondsPosition = options.getString(Options.PREF_SECONDS_POSITION, "start");
+        bigDigits.setSecondsAlign(secondsPosition.equals("end") ? 1f : secondsPosition.equals("center") ? 0.5f : 0f);
+        bigDigits.setShowSecondsColon(options.getBoolean(Options.PREF_SHOW_SECONDS_COLON, true));
 
         int fore = Options.getForeColor(this, options);
         int controlFore = getControlBarForeColor();

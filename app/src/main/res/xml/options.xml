@@ -121,6 +121,16 @@
             android:defaultValue="100%"
             android:entries="@array/secondsSizeValues"
             android:entryValues="@array/secondsSizeValues" />
+        <ListPreference android:title="Seconds Position"
+            android:summary="Where to place the seconds when Seconds Size is below 100%"
+            android:key="secondsPosition"
+            android:defaultValue="start"
+            android:entries="@array/secondsPositionNames"
+            android:entryValues="@array/secondsPositionValues" />
+        <CheckBoxPreference android:title="Show Seconds Colon"
+            android:key="showSecondsColon"
+            android:defaultValue="true"
+            android:summary="Uncheck to hide the ':' between minutes and seconds in landscape mode"></CheckBoxPreference>
         <CheckBoxPreference android:title="Vibrate After Countdown"
             android:key="vibrateAfterCountdown"
             android:defaultValue="true"

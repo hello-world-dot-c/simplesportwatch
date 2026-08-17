@@ -205,6 +205,17 @@
         <item>100%</item>
     </string-array>
 
+    <string-array name="secondsPositionNames">
+        <item>Left / Top</item>
+        <item>Centered</item>
+        <item>Right / Bottom</item>
+    </string-array>
+    <string-array name="secondsPositionValues">
+        <item>start</item>
+        <item>center</item>
+        <item>end</item>
+    </string-array>
+
     <string-array name="onPause">
         <item>100%</item>
         <item>90%</item>

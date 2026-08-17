@@ -22,6 +22,9 @@ public class BigTextView extends View {
     float scale = 0.98f;
     float secondsScale = 1f;
     boolean hasSeconds = false;
+    float secondsAlign = 0f; // 0 = left/top, 0.5 = centered, 1 = right/bottom
+    boolean showSecondsColon = true;
+    private RectF tmpBounds = new RectF();
     GetCenter getCenterX = null;
     GetCenter getCenterY = null;
     static final float BASE_FONT_SIZE = 50f;
@@ -85,6 +88,20 @@ public class BigTextView extends View {
     public void setHasSeconds(boolean hasSeconds) {
         if (this.hasSeconds != hasSeconds) {
             this.hasSeconds = hasSeconds;
+            invalidate();
+        }
+    }
+
+    public void setSecondsAlign(float secondsAlign) {
+        if (this.secondsAlign != secondsAlign) {
+            this.secondsAlign = secondsAlign;
+            invalidate();
+        }
+    }
+
+    public void setShowSecondsColon(boolean showSecondsColon) {
+        if (this.showSecondsColon != showSecondsColon) {
+            this.showSecondsColon = showSecondsColon;
             invalidate();
         }
     }
@@ -191,38 +208,72 @@ public class BigTextView extends View {
         dy += adjustCenter(cHeight, getCenterY, adjustY * height) - cHeight/2f;
 
         float fullTextSize = currentPaint.getTextSize();
+        boolean adjustLastLine = hasSeconds && lastLineNeedsAdjustment();
 
         for (int i = 0 ; i < n ; i++) {
             String line = lines[i];
             float x = cx + adjustX * xOffsets[i];
             float y = dy + adjustY * yOffsets[i];
 
-            if (hasSeconds && secondsScale < 1f && i == n - 1) {
-                String prefix;
-                String suffix;
-                if (n > 1) {
-                    // the seconds have their own line in multiline layouts
-                    prefix = "";
-                    suffix = line;
+            if (adjustLastLine && i == n - 1) {
+                // last line contains (or, in a multiline layout, entirely is) the seconds field;
+                // everything up to and including a trailing colon is drawn at full size, the
+                // seconds themselves (plus any fractional suffix) are drawn at secondsScale,
+                // and secondsAlign decides where the space freed up by shrinking them goes
+                int idx = line.lastIndexOf(':');
+                String beforeColon = idx >= 0 ? line.substring(0, idx) : "";
+                boolean hasColon = idx >= 0;
+                String secondsPart = idx >= 0 ? line.substring(idx + 1) : line;
+
+                if (beforeColon.length() > 0) {
+                    currentPaint.setTextSize(fullTextSize);
+                    miniFont.drawText(canvas, beforeColon, x, y, currentPaint, letterSpacing);
+                    x += miniFont.measureAdvance(currentPaint, letterSpacing, beforeColon);
+                }
+                if (hasColon) {
+                    currentPaint.setTextSize(fullTextSize);
+                    if (showSecondsColon)
+                        miniFont.drawText(canvas, ":", x, y, currentPaint, letterSpacing);
+                    x += miniFont.measureAdvance(currentPaint, letterSpacing, ":");
+                }
+
+                currentPaint.setTextSize(fullTextSize);
+                float fullAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
+                currentPaint.setTextSize(fullTextSize * secondsScale);
+                float shrunkAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
+
+                if (n == 1) {
+                    // landscape: freed-up width goes before/after/split-around the seconds
+                    x += secondsAlign * (fullAdvance - shrunkAdvance);
                 }
                 else {
-                    int idx = line.lastIndexOf(':');
-                    prefix = idx >= 0 ? line.substring(0, idx + 1) : "";
-                    suffix = idx >= 0 ? line.substring(idx + 1) : line;
+                    // portrait: the whole line is the seconds; keep it horizontally centered,
+                    // and use secondsAlign to decide the vertical (top/center/bottom) position
+                    // within the vertical space the full-size seconds line would have used
+                    x += (fullAdvance - shrunkAdvance) / 2f;
+
+                    float savedBaseSize = basePaint.getTextSize();
+                    miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
+                    float fullLineHeight = tmpBounds.height();
+                    basePaint.setTextSize(savedBaseSize * secondsScale);
+                    miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
+                    float shrunkLineHeight = tmpBounds.height();
+                    basePaint.setTextSize(savedBaseSize);
+
+                    y += secondsAlign * (fullLineHeight - shrunkLineHeight) * adjustY;
                 }
-                if (prefix.length() > 0) {
-                    currentPaint.setTextSize(fullTextSize);
-                    miniFont.drawText(canvas, prefix, x, y, currentPaint, letterSpacing);
-                    x += miniFont.measureAdvance(currentPaint, letterSpacing, prefix);
-                }
-                currentPaint.setTextSize(fullTextSize * secondsScale);
-                miniFont.drawText(canvas, suffix, x, y, currentPaint, letterSpacing);
+
+                miniFont.drawText(canvas, secondsPart, x, y, currentPaint, letterSpacing);
                 currentPaint.setTextSize(fullTextSize);
             }
             else {
                 miniFont.drawText(canvas, line, x, y, currentPaint, letterSpacing);
             }
         }
+    }
+
+    private boolean lastLineNeedsAdjustment() {
+        return secondsScale < 1f || !showSecondsColon;
     }
 
     private float adjustCenter(float canvasSize, GetCenter c, float size) {

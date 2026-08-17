@@ -105,10 +105,10 @@ public class Clock extends ShowTime {
         }
         else if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
                 && options.getBoolean(Options.PREF_VOLUME, true)
-                && options.getString(Options.PREF_SCHEME, Options.PREF_SCHEME_START_STOP).equals(Options.PREF_SCHEME_SPORT)) {
+                && options.getString(Options.PREF_SCHEME, Options.PREF_SCHEME_START_STOP).equals(Options.PREF_SCHEME_EXERCISE)) {
             SharedPreferences.Editor ed = options.edit();
-            ed.putBoolean(Options.PREF_SPORT_MODE_PENDING_START, true);
-            ed.putString(Options.PREF_SPORT_MODE_RETURN_CLASS, this.getClass().getName());
+            ed.putBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, true);
+            ed.putString(Options.PREF_EXERCISE_MODE_RETURN_CLASS, this.getClass().getName());
             MyChrono.apply(ed);
             switchActivity(StopWatch.class, LEFT);
             return true;

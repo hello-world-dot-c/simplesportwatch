@@ -121,9 +121,9 @@ public class StopWatch extends ShowTime {
     protected void onResume() {
         super.onResume();
 
-        if (options.getBoolean(Options.PREF_SPORT_MODE_PENDING_START, false)) {
+        if (options.getBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, false)) {
             SharedPreferences.Editor ed = options.edit();
-            ed.putBoolean(Options.PREF_SPORT_MODE_PENDING_START, false);
+            ed.putBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, false);
             MyChrono.apply(ed);
             chrono.freshStart();
         }
@@ -400,8 +400,8 @@ public class StopWatch extends ShowTime {
                 return super.onKeyDown(keyCode, event);
         }
         if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) && volumeControl
-                && controlScheme.equals(Options.PREF_SCHEME_SPORT)) {
-            String returnClassName = options.getString(Options.PREF_SPORT_MODE_RETURN_CLASS, ClockWithSeconds.class.getName());
+                && controlScheme.equals(Options.PREF_SCHEME_EXERCISE)) {
+            String returnClassName = options.getString(Options.PREF_EXERCISE_MODE_RETURN_CLASS, ClockWithSeconds.class.getName());
             Class returnClass = ClockWithSeconds.class;
             try {
                 returnClass = Class.forName(returnClassName);

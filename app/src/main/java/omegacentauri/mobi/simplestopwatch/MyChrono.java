@@ -444,11 +444,11 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
         save();
     }
 
-    // used by Sport Mode: a full reset (zero elapsed time, no laps) that still respects
+    // used by Exercise Mode: a full reset (zero elapsed time, no laps) that still respects
     // whatever delay is currently configured, mirroring firstButton()'s normal !active
     // start path (unlike restartButton(), which always forces an immediate, undelayed
     // start) - so the same countdown beeps/voice a manual Stop, Reset, Start would produce
-    // also happen when Sport Mode switches in from the clock
+    // also happen when Exercise Mode switches in from the clock
     public void freshStart() {
         lapData = "";
         lastLapTime = 0;

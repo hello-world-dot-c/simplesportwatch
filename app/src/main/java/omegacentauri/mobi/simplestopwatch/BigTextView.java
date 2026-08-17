@@ -313,18 +313,22 @@ public class BigTextView extends View {
             basePaint.setTextSize(savedSize);
         }
         else {
-            // there's full-size text before the seconds field - start from the line's
-            // normal full-size bounds (identical to how every other line is measured),
-            // then shrink just the trailing edge by how much narrower the seconds field
-            // becomes at secondsScale, leaving the leading edge untouched
-            miniFont.getTextBounds(basePaint, letterSpacing, line, 0, line.length(), outBounds);
+            // there's full-size text before the seconds field - measure that prefix's own
+            // ink bounds, measure the seconds field's ink bounds AT the shrunk scale (this
+            // scales proportionally, so it's exact - not an approximation), shift the
+            // seconds bounds to sit right after the prefix's advance, and combine the two
+            String prefix = line.substring(0, idx + 1);
+            RectF prefixBounds = new RectF();
+            miniFont.getTextBounds(basePaint, letterSpacing, prefix, 0, prefix.length(), prefixBounds);
+            float prefixAdvance = miniFont.measureAdvance(basePaint, letterSpacing, prefix);
 
-            float fullAdvance = miniFont.measureAdvance(basePaint, letterSpacing, secondsPart);
             basePaint.setTextSize(savedSize * secondsScale);
-            float shrunkAdvance = miniFont.measureAdvance(basePaint, letterSpacing, secondsPart);
+            miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), outBounds);
             basePaint.setTextSize(savedSize);
 
-            outBounds.right -= (fullAdvance - shrunkAdvance);
+            outBounds.left += prefixAdvance;
+            outBounds.right += prefixAdvance;
+            outBounds.union(prefixBounds);
         }
     }
 

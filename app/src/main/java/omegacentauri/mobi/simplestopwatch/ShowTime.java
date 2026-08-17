@@ -155,9 +155,14 @@ abstract public class ShowTime extends Activity {
                 @Override
                 public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     if (Build.VERSION.SDK_INT >= 30) {
-                        // Android 11 (API 30) and higher
-                        Insets systemBarInsets = insets.getInsets(WindowInsets.Type.systemBars());
-                        v.setPadding(systemBarInsets.left, systemBarInsets.top, systemBarInsets.right, systemBarInsets.bottom);
+                        // Android 11 (API 30) and higher. Combine system bars with the display
+                        // cutout (e.g. a punch-hole camera) - otherwise the layout doesn't know
+                        // to avoid it, and content can extend further on the cutout's side than
+                        // on the opposite side, looking off-center even though the padding math
+                        // itself is symmetric.
+                        Insets combinedInsets = insets.getInsets(
+                                WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                        v.setPadding(combinedInsets.left, combinedInsets.top, combinedInsets.right, combinedInsets.bottom);
                     } else if (Build.VERSION.SDK_INT >= 10) {
                         // Android 6.0 (API 23) to 10
                         v.setPadding(insets.getSystemWindowInsetLeft(),

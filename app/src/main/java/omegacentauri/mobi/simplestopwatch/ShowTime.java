@@ -150,6 +150,14 @@ abstract public class ShowTime extends Activity {
     }
 
     void setInsetListener(View main) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            // Opt into edge-to-edge: without this, the OS pre-shrinks the window itself to
+            // dodge the display cutout (legacy behavior for apps targeting an older SDK),
+            // asymmetrically and before this app ever sees it, leaving nothing for the
+            // insets listener below to detect or correct. With it, the window spans the
+            // true physical screen and this app is responsible for its own padding instead.
+            getWindow().setDecorFitsSystemWindows(false);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             main.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override

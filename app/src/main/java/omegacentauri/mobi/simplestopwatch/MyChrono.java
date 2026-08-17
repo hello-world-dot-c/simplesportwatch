@@ -175,8 +175,9 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                 else {
                     msg = "3";
                 }
-                StopWatch.debug("say: "+msg);
-                tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams, "countdown"+msg);
+                int speakResult = tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams, "countdown"+msg);
+                if (speakResult != TextToSpeech.SUCCESS)
+                    Toast.makeText(context, "Voice countdown: speak() failed (code "+speakResult+")", Toast.LENGTH_SHORT).show();
             }
             else if (!quiet && !countdownSilent) {
                 safePlay(shortTone);
@@ -605,15 +606,19 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                 public void onInit(int status) {
                     if(status != TextToSpeech.SUCCESS){
                         tts = null;
+                        Toast.makeText(context, "Voice countdown: TTS init failed (code "+status+"), using beeps", Toast.LENGTH_LONG).show();
                     }
                     else {
                         if (tts != null) {
                             try {
-                                tts.setLanguage(Locale.getDefault());
+                                int langResult = tts.setLanguage(Locale.getDefault());
+                                if (langResult == TextToSpeech.LANG_MISSING_DATA || langResult == TextToSpeech.LANG_NOT_SUPPORTED)
+                                    Toast.makeText(context, "Voice countdown: no language data for device locale (code "+langResult+")", Toast.LENGTH_LONG).show();
                                 tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams, "warmup");
                             }
                             catch(Exception e) {
                                 StopWatch.debug("tts setup failed: "+e);
+                                Toast.makeText(context, "Voice countdown setup failed: "+e, Toast.LENGTH_LONG).show();
                             }
                             // only now is speak() actually guaranteed to produce audio - a
                             // freshly-constructed TextToSpeech initializes asynchronously, and

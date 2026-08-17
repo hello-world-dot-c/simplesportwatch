@@ -88,6 +88,7 @@ public class Options extends PreferenceActivity {
     public static final String PREF_SCHEME_START_STOP_RESTART = "startStopRestart";
     public static final String PREF_SCHEME_SPORT = "sportMode";
     public static final String PREF_SPORT_MODE_PENDING_START = "sportModePendingStart";
+    public static final String PREF_SPORT_MODE_RETURN_CLASS = "sportModeReturnClass";
     private static final String PREF_EXTRA_HEIGHT = "extraButtonHeight";
     private static final String PREF_PERIODIC_BEEP_SPACING = "periodicBeepSpacing";
     private static final String PREF_PERIODIC_BEEP_LENGTH = "periodicBeepLength";

@@ -399,9 +399,16 @@ public class StopWatch extends ShowTime {
             else
                 return super.onKeyDown(keyCode, event);
         }
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP && volumeControl
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) && volumeControl
                 && controlScheme.equals(Options.PREF_SCHEME_SPORT)) {
-            switchActivity(Clock.class, RIGHT);
+            String returnClassName = options.getString(Options.PREF_SPORT_MODE_RETURN_CLASS, ClockWithSeconds.class.getName());
+            Class returnClass = ClockWithSeconds.class;
+            try {
+                returnClass = Class.forName(returnClassName);
+            } catch (ClassNotFoundException e) {
+                debug("class not found "+returnClassName);
+            }
+            switchActivity(returnClass, RIGHT);
             return true;
         }
         if (isFirstButton(keyCode)) {

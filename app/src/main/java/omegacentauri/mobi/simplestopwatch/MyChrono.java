@@ -64,7 +64,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
     private LoudnessEnhancer loudnessEnhancer = null;
     private static final long SHORT_TONE_LENGTH = 75;
     private static final long LONG_TONE_LENGTH = 600;
-    private static final float TONE_FREQUENCY = 2000;
+    private float toneFrequency = 2000f;
     private AudioTrack shortTone;
     private AudioTrack longTone;
     private AudioTrack periodicTone;
@@ -550,8 +550,15 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
 
         quiet = false;
 
+        try {
+            toneFrequency = Float.parseFloat(options.getString(Options.PREF_BEEP_FREQUENCY, "2000"));
+        }
+        catch (NumberFormatException e) {
+            toneFrequency = 2000f;
+        }
+
         int periodicBeepLength = Math.min((int)Options.getPeriodicBeepLength(options),30000);
-        short[] tone = sinewave(TONE_FREQUENCY, Math.max(LONG_TONE_LENGTH,periodicBeepLength));
+        short[] tone = sinewave(toneFrequency, Math.max(LONG_TONE_LENGTH,periodicBeepLength));
         int shortLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * SHORT_TONE_LENGTH));
         int longLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * LONG_TONE_LENGTH));
         int periodicLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * periodicBeepLength));
@@ -569,6 +576,27 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             shortTone.write(tone, 0, shortLength);
         if (periodicTone != null)
             periodicTone.write(tone, 0, periodicLength);
+
+        // Beep Volume only makes sense when neither Boost (which already maxes out the
+        // stream volume below and applies a LoudnessEnhancer) nor the alarm stream (whose
+        // volume is meant to stay reliably audible/consistent) are in play
+        boolean beepVolumeApplies = !options.getBoolean(Options.PREF_BOOST, false) && STREAM != AudioManager.STREAM_ALARM;
+        float beepVolume = 1f;
+        if (beepVolumeApplies) {
+            try {
+                beepVolume = Float.parseFloat(options.getString(Options.PREF_BEEP_VOLUME, "100%").replace("%","")) / 100f;
+            }
+            catch (NumberFormatException e) {
+                beepVolume = 1f;
+            }
+        }
+        if (longTone != null)
+            longTone.setVolume(beepVolume);
+        if (shortTone != null)
+            shortTone.setVolume(beepVolume);
+        if (periodicTone != null)
+            periodicTone.setVolume(beepVolume);
+
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         if (options.getBoolean(Options.PREF_BOOST, false))

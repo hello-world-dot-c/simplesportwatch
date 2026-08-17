@@ -61,6 +61,8 @@ public class Options extends PreferenceActivity {
     public static final String PREF_SOUND = "sounds";
     public static final String PREF_BOOST = "boost";
     public static final String PREF_ALARM = "alarm";
+    public static final String PREF_BEEP_FREQUENCY = "beepFrequency";
+    public static final String PREF_BEEP_VOLUME = "beepVolume";
     public static final String PREF_VOLUME = "volume";
     public static final String PREF_FULLSCREEN = "fullscreen";
     public static final String PREF_FS_BRIGHT = "fsBright";

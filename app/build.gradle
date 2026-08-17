@@ -7,10 +7,25 @@ android {
         applicationId "omegacentauri.mobi.simplestopwatch"
         minSdkVersion 4
         targetSdkVersion 31
-        versionCode 1054
+        // CI passes -PappVersionCode=<run number> so each build is installable over the last
+        // and always sorts above the static baseline below; local/manual builds use the baseline
+        versionCode project.hasProperty('appVersionCode') ? (1054 + project.appVersionCode.toInteger()) : 1054
         versionName "1.54"
     }
+    signingConfigs {
+        debug {
+            // fixed debug keystore (checked in, standard debug credentials) so every build -
+            // local or CI - signs identically and can always be installed over a previous one
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

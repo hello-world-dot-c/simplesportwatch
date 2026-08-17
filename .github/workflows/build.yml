@@ -25,7 +25,7 @@ jobs:
           gradle-version: '7.2'
 
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug -PappVersionCode=${{ github.run_number }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

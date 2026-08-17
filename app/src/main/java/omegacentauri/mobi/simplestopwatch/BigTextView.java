@@ -169,9 +169,14 @@ public class BigTextView extends View {
         float cx = cWidth / 2f;
         float maxWidth = 0;
 
+        boolean reclaimLastLine = hasSeconds && secondsScale < 1f;
+
         for (int i = 0 ; i < n ; i++) {
             String line = lines[i];
-            miniFont.getTextBounds(basePaint, letterSpacing, line, 0, line.length(), bounds);
+            if (reclaimLastLine && i == n - 1)
+                computeShrunkLastLineBounds(line, bounds);
+            else
+                miniFont.getTextBounds(basePaint, letterSpacing, line, 0, line.length(), bounds);
             yOffsets[i] = height - bounds.top;
             height += bounds.height() * (i==n-1 ? 1 : lineSpacing);
             xOffsets[i] = -bounds.centerX();
@@ -237,30 +242,47 @@ public class BigTextView extends View {
                     x += miniFont.measureAdvance(currentPaint, letterSpacing, ":");
                 }
 
-                if (n == 1) {
-                    // landscape: the seconds share the line with the rest of the digits, so
-                    // shrinking them frees up height (they don't reach as high/low as the full
-                    // size digits); secondsAlign picks top/center/bottom within that line height
-                    float savedBaseSize = basePaint.getTextSize();
-                    miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
-                    float fullHeight = tmpBounds.height();
-                    basePaint.setTextSize(savedBaseSize * secondsScale);
-                    miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
-                    float shrunkHeight = tmpBounds.height();
-                    basePaint.setTextSize(savedBaseSize);
+                if (secondsScale < 1f) {
+                    if (n == 1) {
+                        // landscape: the seconds share the line with the rest of the digits.
+                        // secondsAlign picks top/center/bottom, measured against the actual
+                        // rendered bounds of the hour/minute text itself (not an assumed origin)
+                        if (beforeColon.length() > 0) {
+                            currentPaint.setTextSize(fullTextSize);
+                            miniFont.getTextBounds(currentPaint, letterSpacing, beforeColon, 0, beforeColon.length(), tmpBounds);
+                            float prefixTop = y + tmpBounds.top;
+                            float prefixBottom = y + tmpBounds.bottom;
 
-                    y += secondsAlign * (fullHeight - shrunkHeight) * adjustY;
-                }
-                else {
-                    // portrait: the whole line is the seconds, on its own row, so shrinking it
-                    // frees up width relative to the rows above; secondsAlign picks left/center/
-                    // right within the width the full-size row would have used
-                    currentPaint.setTextSize(fullTextSize);
-                    float fullAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
-                    currentPaint.setTextSize(fullTextSize * secondsScale);
-                    float shrunkAdvance = miniFont.measureAdvance(currentPaint, letterSpacing, secondsPart);
+                            currentPaint.setTextSize(fullTextSize * secondsScale);
+                            miniFont.getTextBounds(currentPaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
+                            float secTop = y + tmpBounds.top;
+                            float secBottom = y + tmpBounds.bottom;
 
-                    x += secondsAlign * (fullAdvance - shrunkAdvance);
+                            float target = prefixTop + secondsAlign * (prefixBottom - prefixTop);
+                            float current = secTop + secondsAlign * (secBottom - secTop);
+                            y += target - current;
+                        }
+                    }
+                    else {
+                        // portrait: the whole line is the seconds, on its own row. secondsAlign
+                        // picks left/center/right, measured against the actual rendered bounds of
+                        // the row directly above (the minutes, typically)
+                        String aboveLine = lines[n - 2];
+                        currentPaint.setTextSize(fullTextSize);
+                        miniFont.getTextBounds(currentPaint, letterSpacing, aboveLine, 0, aboveLine.length(), tmpBounds);
+                        float aboveX = cx + adjustX * xOffsets[n - 2];
+                        float aboveLeft = aboveX + tmpBounds.left;
+                        float aboveRight = aboveX + tmpBounds.right;
+
+                        currentPaint.setTextSize(fullTextSize * secondsScale);
+                        miniFont.getTextBounds(currentPaint, letterSpacing, secondsPart, 0, secondsPart.length(), tmpBounds);
+                        float secLeft = x + tmpBounds.left;
+                        float secRight = x + tmpBounds.right;
+
+                        float target = aboveLeft + secondsAlign * (aboveRight - aboveLeft);
+                        float current = secLeft + secondsAlign * (secRight - secLeft);
+                        x += target - current;
+                    }
                 }
 
                 currentPaint.setTextSize(fullTextSize * secondsScale);
@@ -270,6 +292,37 @@ public class BigTextView extends View {
             else {
                 miniFont.drawText(canvas, line, x, y, currentPaint, letterSpacing);
             }
+        }
+    }
+
+    // computes the ink bounds of the last line as it will actually be rendered, with the
+    // seconds field (after any colon, whose width is always reserved) measured at
+    // secondsScale instead of full size, so the auto-fit sizing below reclaims the space
+    // a shrunk seconds field frees up instead of leaving it as a dead gap
+    private void computeShrunkLastLineBounds(String line, RectF outBounds) {
+        int idx = line.lastIndexOf(':');
+        String prefix = idx >= 0 ? line.substring(0, idx + 1) : "";
+        String secondsPart = idx >= 0 ? line.substring(idx + 1) : line;
+
+        float savedSize = basePaint.getTextSize();
+
+        if (prefix.length() > 0) {
+            RectF prefixBounds = new RectF();
+            miniFont.getTextBounds(basePaint, letterSpacing, prefix, 0, prefix.length(), prefixBounds);
+            float prefixAdvance = miniFont.measureAdvance(basePaint, letterSpacing, prefix);
+
+            basePaint.setTextSize(savedSize * secondsScale);
+            miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), outBounds);
+            basePaint.setTextSize(savedSize);
+
+            outBounds.left += prefixAdvance;
+            outBounds.right += prefixAdvance;
+            outBounds.union(prefixBounds);
+        }
+        else {
+            basePaint.setTextSize(savedSize * secondsScale);
+            miniFont.getTextBounds(basePaint, letterSpacing, secondsPart, 0, secondsPart.length(), outBounds);
+            basePaint.setTextSize(savedSize);
         }
     }
 

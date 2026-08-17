@@ -121,6 +121,13 @@ public class StopWatch extends ShowTime {
     protected void onResume() {
         super.onResume();
 
+        if (options.getBoolean(Options.PREF_SPORT_MODE_PENDING_START, false)) {
+            SharedPreferences.Editor ed = options.edit();
+            ed.putBoolean(Options.PREF_SPORT_MODE_PENDING_START, false);
+            MyChrono.apply(ed);
+            chrono.restartButton();
+        }
+
         if (firstButton != null) {
             if (controlScheme.equals(Options.PREF_SCHEME_RESTART)) {
                 firstButton.setLongClickable(true);
@@ -391,6 +398,11 @@ public class StopWatch extends ShowTime {
                 return true;
             else
                 return super.onKeyDown(keyCode, event);
+        }
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP && volumeControl
+                && controlScheme.equals(Options.PREF_SCHEME_SPORT)) {
+            switchActivity(Clock.class, RIGHT);
+            return true;
         }
         if (isFirstButton(keyCode)) {
             pressFirstButton();

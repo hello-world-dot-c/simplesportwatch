@@ -103,6 +103,15 @@ public class Clock extends ShowTime {
         else if (keyCode == KeyEvent.KEYCODE_MENU) {
             onButtonMenu(null);
         }
+        else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP
+                && options.getBoolean(Options.PREF_VOLUME, true)
+                && options.getString(Options.PREF_SCHEME, Options.PREF_SCHEME_START_STOP).equals(Options.PREF_SCHEME_SPORT)) {
+            SharedPreferences.Editor ed = options.edit();
+            ed.putBoolean(Options.PREF_SPORT_MODE_PENDING_START, true);
+            MyChrono.apply(ed);
+            switchActivity(StopWatch.class, LEFT);
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 

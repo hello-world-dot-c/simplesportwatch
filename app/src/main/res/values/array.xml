@@ -249,10 +249,12 @@
         <item>Start/Stop/Pause and Lap</item>
         <item>Start/Stop/Pause and Restart</item>
         <item>Restart (long: Zero)</item>
+        <item>Sport Mode (Volume Up: Clock/Stopwatch)</item>
     </string-array>
     <string-array name="schemeValues">
         <item>startStop</item>
         <item>startStopRestart</item>
         <item>restart</item>
+        <item>sportMode</item>
     </string-array>
 </resources>

@@ -66,6 +66,7 @@ abstract public class ShowTime extends Activity {
     protected static final int DOWN = 3;
     protected static final int UP = 4;
     String colorThemeOptionName = Options.PREF_STOPWATCH_COLOR;
+    String scaleOptionName = Options.PREF_SCALE;
     //static final Class activityCircle[] = { StopWatch.class, Clock.class, ClockWithSeconds.class };
 
 //    protected View.OnClickListener fullScreenListener;
@@ -220,7 +221,7 @@ abstract public class ShowTime extends Activity {
         bigDigits.setMaxAspect(Options.getMaxAspect(options));
         bigDigits.setLineSpacing(Float.parseFloat(options.getString(Options.PREF_LINE_SPACING, "105%").replace("%",""))/100f);
         bigDigits.setLetterSpacing(Float.parseFloat(options.getString(Options.PREF_LETTER_SPACING, "95%").replace("%",""))/100f);
-        bigDigits.setScale(Float.parseFloat(options.getString(Options.PREF_SCALE, "98%").replace("%",""))/100f);
+        bigDigits.setScale(Float.parseFloat(options.getString(scaleOptionName, "98%").replace("%",""))/100f);
         float secondsScale = Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%",""))/100f;
         bigDigits.setSecondsScale(secondsScale);
         String secondsPosition = options.getString(Options.PREF_SECONDS_POSITION, "start");

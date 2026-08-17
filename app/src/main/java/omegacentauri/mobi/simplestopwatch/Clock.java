@@ -31,6 +31,7 @@ public class Clock extends ShowTime {
         super.onCreate(savedInstanceState);
 
         colorThemeOptionName = Options.PREF_CLOCK_COLOR;
+        scaleOptionName = Options.PREF_SCALE_CLOCK;
 
         setContentView(R.layout.activity_clock);
         bigDigits = (BigTextView)findViewById(R.id.chrono);

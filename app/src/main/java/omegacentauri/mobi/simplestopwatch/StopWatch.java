@@ -71,6 +71,7 @@ public class StopWatch extends ShowTime {
             noTouch = savedInstanceState.getBoolean("noTouch", false);
 
         colorThemeOptionName = Options.PREF_STOPWATCH_COLOR;
+        scaleOptionName = Options.PREF_SCALE;
 
         String last = options.getString(Options.PREF_LAST_ACTIVITY, StopWatch.class.getName());
         if (! last.equals(StopWatch.class.getName())) {

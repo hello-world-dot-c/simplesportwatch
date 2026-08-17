@@ -109,9 +109,15 @@
             android:defaultValue="105%"
             android:entries="@array/lineSpacingValues"
             android:entryValues="@array/lineSpacingValues" />
-        <ListPreference android:title="Large Digit Scale"
-            android:summary="Set scale for large digits"
+        <ListPreference android:title="Stopwatch Digit Scale"
+            android:summary="Set scale for large digits in stopwatch mode"
             android:key="scale"
+            android:defaultValue="98%"
+            android:entries="@array/scaleValues"
+            android:entryValues="@array/scaleValues" />
+        <ListPreference android:title="Clock Digit Scale"
+            android:summary="Set scale for large digits in clock mode"
+            android:key="scaleClock"
             android:defaultValue="98%"
             android:entries="@array/scaleValues"
             android:entryValues="@array/scaleValues" />

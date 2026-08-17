@@ -55,6 +55,7 @@ public class Options extends PreferenceActivity {
     public static final String PREF_DELAY = "delay";
     public static final String PREF_CUSTOM_DELAY = "customDelay";
     public static final String PREF_SCALE = "scale";
+    public static final String PREF_SCALE_CLOCK = "scaleClock";
     public static final String PREF_SECONDS_SIZE = "secondsSize";
     public static final String PREF_SECONDS_POSITION = "secondsPosition";
     public static final String PREF_SHOW_SECONDS_COLON = "showSecondsColon";

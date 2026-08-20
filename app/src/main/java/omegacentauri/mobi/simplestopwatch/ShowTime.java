@@ -20,6 +20,7 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -54,6 +55,7 @@ abstract public class ShowTime extends Activity {
     private static final float unselectedThickness = 2f;
     private static final float focusedThickness = 6f;
     private static final float selectedThickness = 9f;
+    private static final float BASE_FRACTION_SIZE_SP = 32f;
     protected View mainContainer;
     protected static int textButtons[] = {};
     protected static int imageButtons[][] = {};
@@ -64,6 +66,7 @@ abstract public class ShowTime extends Activity {
     protected static final int DOWN = 3;
     protected static final int UP = 4;
     String colorThemeOptionName = Options.PREF_STOPWATCH_COLOR;
+    String scaleOptionName = Options.PREF_SCALE;
     //static final Class activityCircle[] = { StopWatch.class, Clock.class, ClockWithSeconds.class };
 
 //    protected View.OnClickListener fullScreenListener;
@@ -148,14 +151,27 @@ abstract public class ShowTime extends Activity {
     }
 
     void setInsetListener(View main) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            // Opt into edge-to-edge: without this, the OS pre-shrinks the window itself to
+            // dodge the display cutout (legacy behavior for apps targeting an older SDK),
+            // asymmetrically and before this app ever sees it, leaving nothing for the
+            // insets listener below to detect or correct. With it, the window spans the
+            // true physical screen and this app is responsible for its own padding instead.
+            getWindow().setDecorFitsSystemWindows(false);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             main.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
                 public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     if (Build.VERSION.SDK_INT >= 30) {
-                        // Android 11 (API 30) and higher
-                        Insets systemBarInsets = insets.getInsets(WindowInsets.Type.systemBars());
-                        v.setPadding(systemBarInsets.left, systemBarInsets.top, systemBarInsets.right, systemBarInsets.bottom);
+                        // Android 11 (API 30) and higher. Combine system bars with the display
+                        // cutout (e.g. a punch-hole camera) - otherwise the layout doesn't know
+                        // to avoid it, and content can extend further on the cutout's side than
+                        // on the opposite side, looking off-center even though the padding math
+                        // itself is symmetric.
+                        Insets combinedInsets = insets.getInsets(
+                                WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                        v.setPadding(combinedInsets.left, combinedInsets.top, combinedInsets.right, combinedInsets.bottom);
                     } else if (Build.VERSION.SDK_INT >= 10) {
                         // Android 6.0 (API 23) to 10
                         v.setPadding(insets.getSystemWindowInsetLeft(),
@@ -205,7 +221,12 @@ abstract public class ShowTime extends Activity {
         bigDigits.setMaxAspect(Options.getMaxAspect(options));
         bigDigits.setLineSpacing(Float.parseFloat(options.getString(Options.PREF_LINE_SPACING, "105%").replace("%",""))/100f);
         bigDigits.setLetterSpacing(Float.parseFloat(options.getString(Options.PREF_LETTER_SPACING, "95%").replace("%",""))/100f);
-        bigDigits.setScale(Float.parseFloat(options.getString(Options.PREF_SCALE, "98%").replace("%",""))/100f);
+        bigDigits.setScale(Float.parseFloat(options.getString(scaleOptionName, "98%").replace("%",""))/100f);
+        float secondsScale = Float.parseFloat(options.getString(Options.PREF_SECONDS_SIZE, "100%").replace("%",""))/100f;
+        bigDigits.setSecondsScale(secondsScale);
+        String secondsPosition = options.getString(Options.PREF_SECONDS_POSITION, "start");
+        bigDigits.setSecondsAlign(secondsPosition.equals("end") ? 1f : secondsPosition.equals("center") ? 0.5f : 0f);
+        bigDigits.setShowSecondsColon(options.getBoolean(Options.PREF_SHOW_SECONDS_COLON, true));
 
         int fore = Options.getForeColor(this, options);
         int controlFore = getControlBarForeColor();
@@ -217,7 +238,9 @@ abstract public class ShowTime extends Activity {
 
         ((ViewGroup) findViewById(android.R.id.content)).getChildAt(0).setBackgroundColor(back);
 
-        ((TextView)findViewById(R.id.fraction)).setTextColor(controlFore);
+        TextView fractionView = (TextView)findViewById(R.id.fraction);
+        fractionView.setTextColor(controlFore);
+        fractionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, BASE_FRACTION_SIZE_SP * secondsScale);
         debug(String.format("controlFore=%x", controlFore));
 
         bigDigits.setTextColor(fore);

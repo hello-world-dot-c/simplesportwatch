@@ -71,6 +71,7 @@ public class StopWatch extends ShowTime {
             noTouch = savedInstanceState.getBoolean("noTouch", false);
 
         colorThemeOptionName = Options.PREF_STOPWATCH_COLOR;
+        scaleOptionName = Options.PREF_SCALE;
 
         String last = options.getString(Options.PREF_LAST_ACTIVITY, StopWatch.class.getName());
         if (! last.equals(StopWatch.class.getName())) {
@@ -120,6 +121,13 @@ public class StopWatch extends ShowTime {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (options.getBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, false)) {
+            SharedPreferences.Editor ed = options.edit();
+            ed.putBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, false);
+            MyChrono.apply(ed);
+            chrono.freshStart();
+        }
 
         if (firstButton != null) {
             if (controlScheme.equals(Options.PREF_SCHEME_RESTART)) {
@@ -391,6 +399,18 @@ public class StopWatch extends ShowTime {
                 return true;
             else
                 return super.onKeyDown(keyCode, event);
+        }
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) && volumeControl
+                && controlScheme.equals(Options.PREF_SCHEME_EXERCISE)) {
+            String returnClassName = options.getString(Options.PREF_EXERCISE_MODE_RETURN_CLASS, ClockWithSeconds.class.getName());
+            Class returnClass = ClockWithSeconds.class;
+            try {
+                returnClass = Class.forName(returnClassName);
+            } catch (ClassNotFoundException e) {
+                debug("class not found "+returnClassName);
+            }
+            switchActivity(returnClass, RIGHT);
+            return true;
         }
         if (isFirstButton(keyCode)) {
             pressFirstButton();

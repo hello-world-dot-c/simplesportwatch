@@ -31,6 +31,7 @@ public class Clock extends ShowTime {
         super.onCreate(savedInstanceState);
 
         colorThemeOptionName = Options.PREF_CLOCK_COLOR;
+        scaleOptionName = Options.PREF_SCALE_CLOCK;
 
         setContentView(R.layout.activity_clock);
         bigDigits = (BigTextView)findViewById(R.id.chrono);
@@ -102,6 +103,16 @@ public class Clock extends ShowTime {
         }
         else if (keyCode == KeyEvent.KEYCODE_MENU) {
             onButtonMenu(null);
+        }
+        else if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
+                && options.getBoolean(Options.PREF_VOLUME, true)
+                && options.getString(Options.PREF_SCHEME, Options.PREF_SCHEME_START_STOP).equals(Options.PREF_SCHEME_EXERCISE)) {
+            SharedPreferences.Editor ed = options.edit();
+            ed.putBoolean(Options.PREF_EXERCISE_MODE_PENDING_START, true);
+            ed.putString(Options.PREF_EXERCISE_MODE_RETURN_CLASS, this.getClass().getName());
+            MyChrono.apply(ed);
+            switchActivity(StopWatch.class, LEFT);
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }

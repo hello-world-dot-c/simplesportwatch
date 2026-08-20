@@ -117,6 +117,8 @@
         <item>bold</item>
         <item>medium</item>
         <item>regular</item>
+        <item>poppins bold</item>
+        <item>poppins extrabold</item>
     </string-array>
 
     <string-array name="fsControlBarBrightnessValues">
@@ -145,6 +147,8 @@
         <item>Roboto Bold</item>
         <item>Roboto Medium</item>
         <item>Roboto Regular</item>
+        <item>Poppins Bold</item>
+        <item>Poppins ExtraBold</item>
     </string-array>
 
     <string-array name="letterSpacingValues">
@@ -193,6 +197,29 @@
         <item>100%</item>
     </string-array>
 
+    <string-array name="secondsSizeValues">
+        <item>20%</item>
+        <item>30%</item>
+        <item>40%</item>
+        <item>50%</item>
+        <item>60%</item>
+        <item>70%</item>
+        <item>80%</item>
+        <item>90%</item>
+        <item>100%</item>
+    </string-array>
+
+    <string-array name="secondsPositionNames">
+        <item>Left / Top</item>
+        <item>Centered</item>
+        <item>Right / Bottom</item>
+    </string-array>
+    <string-array name="secondsPositionValues">
+        <item>start</item>
+        <item>center</item>
+        <item>end</item>
+    </string-array>
+
     <string-array name="onPause">
         <item>100%</item>
         <item>90%</item>
@@ -203,6 +230,19 @@
         <item>40%</item>
         <item>30%</item>
         <item>20%</item>
+    </string-array>
+
+    <string-array name="beepVolumeValues">
+        <item>100%</item>
+        <item>90%</item>
+        <item>80%</item>
+        <item>70%</item>
+        <item>60%</item>
+        <item>50%</item>
+        <item>40%</item>
+        <item>30%</item>
+        <item>20%</item>
+        <item>10%</item>
     </string-array>
 
     <string-array name="colorSchemes">
@@ -222,10 +262,12 @@
         <item>Start/Stop/Pause and Lap</item>
         <item>Start/Stop/Pause and Restart</item>
         <item>Restart (long: Zero)</item>
+        <item>Exercise Mode (Volume Up: Clock/Stopwatch)</item>
     </string-array>
     <string-array name="schemeValues">
         <item>startStop</item>
         <item>startStopRestart</item>
         <item>restart</item>
+        <item>exerciseMode</item>
     </string-array>
 </resources>

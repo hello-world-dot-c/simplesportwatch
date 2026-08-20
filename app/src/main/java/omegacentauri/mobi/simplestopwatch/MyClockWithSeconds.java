@@ -16,6 +16,11 @@ public class MyClockWithSeconds extends MyClock {
         super(context, options, mainView, fractionView, mainContainer);
     }
 
+    @Override
+    protected boolean mainHasSeconds() {
+        return true;
+    }
+
     public void restore() {
 
         twentyFourHour = options.getBoolean(Options.PREF_24HOUR, false);

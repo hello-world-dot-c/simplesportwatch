@@ -55,9 +55,15 @@ public class Options extends PreferenceActivity {
     public static final String PREF_DELAY = "delay";
     public static final String PREF_CUSTOM_DELAY = "customDelay";
     public static final String PREF_SCALE = "scale";
+    public static final String PREF_SCALE_CLOCK = "scaleClock";
+    public static final String PREF_SECONDS_SIZE = "secondsSize";
+    public static final String PREF_SECONDS_POSITION = "secondsPosition";
+    public static final String PREF_SHOW_SECONDS_COLON = "showSecondsColon";
     public static final String PREF_SOUND = "sounds";
     public static final String PREF_BOOST = "boost";
     public static final String PREF_ALARM = "alarm";
+    public static final String PREF_BEEP_FREQUENCY = "beepFrequency";
+    public static final String PREF_BEEP_VOLUME = "beepVolume";
     public static final String PREF_VOLUME = "volume";
     public static final String PREF_FULLSCREEN = "fullscreen";
     public static final String PREF_FS_BRIGHT = "fsBright";
@@ -83,6 +89,9 @@ public class Options extends PreferenceActivity {
 
     public static final String PREF_SCHEME = "controlScheme";
     public static final String PREF_SCHEME_START_STOP_RESTART = "startStopRestart";
+    public static final String PREF_SCHEME_EXERCISE = "exerciseMode";
+    public static final String PREF_EXERCISE_MODE_PENDING_START = "exerciseModePendingStart";
+    public static final String PREF_EXERCISE_MODE_RETURN_CLASS = "exerciseModeReturnClass";
     private static final String PREF_EXTRA_HEIGHT = "extraButtonHeight";
     private static final String PREF_PERIODIC_BEEP_SPACING = "periodicBeepSpacing";
     private static final String PREF_PERIODIC_BEEP_LENGTH = "periodicBeepLength";
@@ -145,6 +154,12 @@ public class Options extends PreferenceActivity {
         }
         else if (f.equals("FHWA E")) {
             mf = new FHWAE();
+        }
+        else if (f.equals("poppins bold")) {
+            mf = new PoppinsBoldDigitsColon();
+        }
+        else if (f.equals("poppins extrabold")) {
+            mf = new PoppinsExtraBoldDigitsColon();
         }
         else {
             mf = new SansBoldDigitsColon();

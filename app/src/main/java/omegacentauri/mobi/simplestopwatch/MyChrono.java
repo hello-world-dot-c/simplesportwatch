@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.audiofx.LoudnessEnhancer;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -25,7 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,15 +55,16 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
     public int precision = 100;
     private TextToSpeech tts = null;
     private boolean ttsMode;
+    private volatile boolean ttsReady = false;
     private long ttsSync;
     int STREAM = AudioManager.STREAM_ALARM;;
     private boolean boostAudio = false;
     private static final int GAIN = 2000;
-    HashMap<String,String> ttsParams = new HashMap<String,String>();
+    Bundle ttsParams = new Bundle();
     private LoudnessEnhancer loudnessEnhancer = null;
     private static final long SHORT_TONE_LENGTH = 75;
     private static final long LONG_TONE_LENGTH = 600;
-    private static final float TONE_FREQUENCY = 2000;
+    private float toneFrequency = 2000f;
     private AudioTrack shortTone;
     private AudioTrack longTone;
     private AudioTrack periodicTone;
@@ -127,7 +129,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
 
 
     private void announce(long t) {
-        if (t < -1000 && (tts != null && ttsMode)) {
+        if (t < -1000 && (tts != null && ttsMode && ttsReady)) {
             t += ttsSync;
         }
         else {
@@ -162,7 +164,7 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             lastAnnounced = floorDiv(t, 1000)*1000;
         }
         else if (t < 0) {
-            if (tts != null && ttsMode) {
+            if (tts != null && ttsMode && ttsReady) {
                 String msg;
                 if (-1000 <= t) {
                     msg = "1";
@@ -173,8 +175,9 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
                 else {
                     msg = "3";
                 }
-                StopWatch.debug("say: "+msg);
-                tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams);
+                int speakResult = tts.speak(msg,TextToSpeech.QUEUE_FLUSH, ttsParams, "countdown"+msg);
+                if (speakResult != TextToSpeech.SUCCESS)
+                    Toast.makeText(context, "Voice countdown: speak() failed (code "+speakResult+")", Toast.LENGTH_SHORT).show();
             }
             else if (!quiet && !countdownSilent) {
                 safePlay(shortTone);
@@ -225,6 +228,8 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             }
         }
 
+        String format = options.getString(Options.PREF_FORMAT, "h:m:s");
+        mainView.setHasSeconds(!format.equals("h:m") && !format.equals("m") && !format.equals("mm"));
         mainView.setText(formatTime(t,mainView.getHeight() > mainView.getWidth()),false, !active || paused);
         setFractionView(formatTimeFraction(t, active && paused, false));
 
@@ -439,6 +444,25 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
         save();
     }
 
+    // used by Exercise Mode: a full reset (zero elapsed time, no laps) that still respects
+    // whatever delay is currently configured, mirroring firstButton()'s normal !active
+    // start path (unlike restartButton(), which always forces an immediate, undelayed
+    // start) - so the same countdown beeps/voice a manual Stop, Reset, Start would produce
+    // also happen when Exercise Mode switches in from the clock
+    public void freshStart() {
+        lapData = "";
+        lastLapTime = 0;
+        if (delayTime < 0)
+            lastAnnounced = delayTime - 1000;
+        else
+            lastAnnounced = 1000;
+        baseTime = SystemClock.elapsedRealtime() - delayTime;
+        paused = false;
+        active = true;
+        startUpdating();
+        save();
+    }
+
     public void firstButtonLong(String controlScheme) {
         if (!controlScheme.equals(Options.PREF_SCHEME_RESTART)) {
             return;
@@ -526,8 +550,15 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
 
         quiet = false;
 
+        try {
+            toneFrequency = Float.parseFloat(options.getString(Options.PREF_BEEP_FREQUENCY, "2000"));
+        }
+        catch (NumberFormatException e) {
+            toneFrequency = 2000f;
+        }
+
         int periodicBeepLength = Math.min((int)Options.getPeriodicBeepLength(options),30000);
-        short[] tone = sinewave(TONE_FREQUENCY, Math.max(LONG_TONE_LENGTH,periodicBeepLength));
+        short[] tone = sinewave(toneFrequency, Math.max(LONG_TONE_LENGTH,periodicBeepLength));
         int shortLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * SHORT_TONE_LENGTH));
         int longLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * LONG_TONE_LENGTH));
         int periodicLength = Math.min(tone.length, (int) (AUDIO_RATE_DOUBLE * periodicBeepLength));
@@ -545,6 +576,27 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             shortTone.write(tone, 0, shortLength);
         if (periodicTone != null)
             periodicTone.write(tone, 0, periodicLength);
+
+        // Beep Volume only makes sense when neither Boost (which already maxes out the
+        // stream volume below and applies a LoudnessEnhancer) nor the alarm stream (whose
+        // volume is meant to stay reliably audible/consistent) are in play
+        boolean beepVolumeApplies = !options.getBoolean(Options.PREF_BOOST, false) && STREAM != AudioManager.STREAM_ALARM;
+        float beepVolume = 1f;
+        if (beepVolumeApplies) {
+            try {
+                beepVolume = Float.parseFloat(options.getString(Options.PREF_BEEP_VOLUME, "100%").replace("%","")) / 100f;
+            }
+            catch (NumberFormatException e) {
+                beepVolume = 1f;
+            }
+        }
+        if (longTone != null)
+            longTone.setVolume(beepVolume);
+        if (shortTone != null)
+            shortTone.setVolume(beepVolume);
+        if (periodicTone != null)
+            periodicTone.setVolume(beepVolume);
+
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         if (options.getBoolean(Options.PREF_BOOST, false))
@@ -567,27 +619,50 @@ public class MyChrono implements BigTextView.GetCenter, MyTimeKeeper {
             }
         }
 
-        if (soundMode.equals("voice")) {
+        if (soundMode.equals("voice") && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            // speak(CharSequence, int, Bundle, String) requires API 21; minSdkVersion here is
+            // 4, so fall back to beeps rather than risk NoSuchMethodError on an old device
+            ttsMode = false;
+        }
+        else if (soundMode.equals("voice")) {
             ttsMode = true;
-            ttsParams.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(STREAM));
+            ttsReady = false;
+            ttsParams.putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, STREAM);
             tts = null;
             tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
                 @Override
                 public void onInit(int status) {
                     if(status != TextToSpeech.SUCCESS){
                         tts = null;
+                        Toast.makeText(context, "Voice countdown: TTS init failed (code "+status+"), using beeps", Toast.LENGTH_LONG).show();
                     }
                     else {
-                        if (tts != null)
+                        if (tts != null) {
                             try {
-                                tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams);
+                                int langResult = tts.setLanguage(Locale.getDefault());
+                                if (langResult == TextToSpeech.LANG_MISSING_DATA || langResult == TextToSpeech.LANG_NOT_SUPPORTED)
+                                    Toast.makeText(context, "Voice countdown: no language data for device locale (code "+langResult+")", Toast.LENGTH_LONG).show();
+                                tts.speak("", TextToSpeech.QUEUE_FLUSH, ttsParams, "warmup");
                             }
-                            catch(Exception e) {}
+                            catch(Exception e) {
+                                StopWatch.debug("tts setup failed: "+e);
+                                Toast.makeText(context, "Voice countdown setup failed: "+e, Toast.LENGTH_LONG).show();
+                            }
+                            // only now is speak() actually guaranteed to produce audio - a
+                            // freshly-constructed TextToSpeech initializes asynchronously, and
+                            // announce() calling speak() before this fires gets silently
+                            // dropped by the engine, which is why "voice" previously seemed to
+                            // do nothing for short (e.g. 3 second) countdowns. ttsReady must be
+                            // set regardless of whether setLanguage/speak above succeeded, or a
+                            // single exception there permanently strands the app on the beep
+                            // fallback with no way to recover until the next setAudio() call
+                            ttsReady = true;
+                        }
                     }
                 }
             });
             if (loudnessEnhancer != null)
-                ttsParams.put(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, String.valueOf(sessionId));
+                ttsParams.putInt(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, sessionId);
         }
         else if (soundMode.equals("beeps")) {
             ttsMode = false;

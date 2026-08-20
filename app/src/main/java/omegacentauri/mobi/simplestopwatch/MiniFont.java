@@ -126,6 +126,21 @@ abstract public class MiniFont {
         bounds.top *= scale;
     }
 
+    public float measureAdvance(Paint paint, float letterSpacing, String text) {
+        float scaleY = paint.getTextSize() / defaultFontSize;
+        float scaleX = scaleY * paint.getTextScaleX();
+        float advance = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            try {
+                advance += map.get(c).width * letterSpacing * scaleX;
+            }
+            catch (Exception e) {
+            }
+        }
+        return advance;
+    }
+
     public void drawText(Canvas canvas, String text, float x, float y, Paint paint, float letterSpacing) {
         float scaleY = paint.getTextSize() / defaultFontSize;
         float scaleX = scaleY * paint.getTextScaleX();
